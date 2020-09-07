@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean automaticLogUser(){
         Intent quemChamou=this.getIntent();
-        if (quemChamou==null) {
+        if (quemChamou!=null) {
             return  quemChamou.getBooleanExtra("automaticLogout", false);
         }
         SharedPreferences hasUser = getSharedPreferences("usuarioPadrao", Activity.MODE_PRIVATE);
