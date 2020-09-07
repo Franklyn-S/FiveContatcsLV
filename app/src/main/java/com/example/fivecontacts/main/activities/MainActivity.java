@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.ArraySet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,7 +20,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.fivecontacts.R;
+import com.example.fivecontacts.main.model.Contato;
 import com.example.fivecontacts.main.model.User;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,6 +40,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (automaticLogUser()) {
+            User user=montarObjetoUser();
+            // Open contacts screen
+            Intent intent = new Intent(MainActivity.this, ListaDeContatos_ListView.class);
+            intent.putExtra("usuario",user);
+            startActivity(intent);
+        }
+
         btLogar=findViewById(R.id.btLogar);
         btNovo=findViewById(R.id.btNovo);
         edUser=findViewById(R.id.edT_Login);
@@ -125,9 +140,36 @@ public class MainActivity extends AppCompatActivity {
    }
 
     private User montarObjetoUser() {
-        User user=new User("Windson","","");
+        SharedPreferences hasuser = getSharedPreferences("usuarioPadrao", Activity.MODE_PRIVATE);
+        String loginSalvo = hasuser.getString("login", "");
+        String senhaSalvo = hasuser.getString("senha", "");
+        String emailSalvo = hasuser.getString("email", "");
+        String nomeSalvo = hasuser.getString("nome", "");
+        Set<String> names = hasuser.getStringSet("contactNames", new ArraySet<String>());
+        Set<String> numbers = hasuser.getStringSet("contactNumbers", new ArraySet<String>());
+
+        ArrayList<Contato> contactList = new ArrayList<>();
+
+        Iterator nameIterator = names.iterator();
+        Iterator numbersIterator = numbers.iterator();
+
+        while(nameIterator.hasNext() && numbersIterator.hasNext()){
+            Contato contact = new Contato(nameIterator.next().toString(), numbersIterator.next().toString());
+            contactList.add(contact);
+        }
+
+
+        User user=new User(nomeSalvo,loginSalvo,senhaSalvo, emailSalvo, contactList);
         return user;
     }
 
+    private boolean automaticLogUser(){
+        Intent quemChamou=this.getIntent();
+        if (quemChamou==null) {
+            return  quemChamou.getBooleanExtra("automaticLogout", false);
+        }
+        SharedPreferences hasUser = getSharedPreferences("usuarioPadrao", Activity.MODE_PRIVATE);
+        return hasUser.getBoolean("manterLogado", false);
+    }
 
 }

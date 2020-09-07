@@ -1,5 +1,6 @@
 package com.example.fivecontacts.main.activities;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
@@ -9,6 +10,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -21,8 +23,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MudarDadosUsuario extends AppCompatActivity {
 
-    boolean primeiraVezUser=true;
-    boolean primeiraVezSenha=true;
     EditText edUser;
     EditText edPass;
     EditText edNome;
@@ -30,6 +30,7 @@ public class MudarDadosUsuario extends AppCompatActivity {
     Switch swLogado;
 
     Button btModificar;
+    Button btLogout;
     BottomNavigationView bnv;
 
     @Override
@@ -38,6 +39,7 @@ public class MudarDadosUsuario extends AppCompatActivity {
         setContentView(R.layout.activity_alterar_usuario);
 
         btModificar=findViewById(R.id.btCriar);
+        btLogout=findViewById(R.id.logoutButton);
         bnv=findViewById(R.id.bnv);
         bnv.setSelectedItemId(R.id.anvPerfil);
 
@@ -47,47 +49,23 @@ public class MudarDadosUsuario extends AppCompatActivity {
         edEmail=findViewById(R.id.edEmail);
         swLogado=findViewById(R.id.swLogado);
 
+        SharedPreferences hasuser = getSharedPreferences("usuarioPadrao", Activity.MODE_PRIVATE);
+        String loginSalvo = hasuser.getString("login", "");
+        String senhaSalvo = hasuser.getString("senha", "");
+        String emailSalvo = hasuser.getString("email", "");
+        String nomeSalvo = hasuser.getString("nome", "");
+        Boolean manterlogado = hasuser.getBoolean("manterLogado", false);
 
-        //Evento de limpar Componente
-        edUser.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (primeiraVezUser){
-                    primeiraVezUser=false;
-                    edUser.setText("");
-                }
-
-                return false;
-            }
-        });
-        //Evento de limpar Componente
-
-        edPass.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (primeiraVezSenha){
-                    primeiraVezSenha=false;
-                    edPass.setText("");
-                    edPass.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    );
-                }
-                return false;
-            }
-        });
-
-        //Evento de limpar Componente - E-mail
-        //TO-DO
-
-        //Evento de limpar Componente - Nome
-        //TO-DO
-
-
+        edEmail.setText(emailSalvo);
+        edNome.setText(nomeSalvo);
+        edPass.setText(senhaSalvo);
+        edPass.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        edUser.setText(loginSalvo);
+        swLogado.setChecked(manterlogado);
 
         btModificar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
                 String nome, login, senha;
                 nome = edNome.getText().toString();
                 login = edUser.getText().toString();
@@ -111,7 +89,6 @@ public class MudarDadosUsuario extends AppCompatActivity {
                 escritor.putString("email",email);
                 escritor.putBoolean("manterLogado",manterLogado);
 
-
                 //Falta Salvar o E-mail
 
                 escritor.commit(); //Salva em Disco
@@ -121,5 +98,36 @@ public class MudarDadosUsuario extends AppCompatActivity {
                 finish();
             }
         });
+
+        btLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(MudarDadosUsuario.this,MainActivity.class);
+                intent.putExtra("automaticLogout", false);
+                startActivity(intent);
+            }
+        });
+
+        bnv.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Log.v("PDM", Integer.toString(item.getItemId()));
+                Log.v("PDM", "test");
+                if(item.getItemId()==R.id.anvLigar) {
+                    Intent newUserIntent = new Intent(MudarDadosUsuario.this, ListaDeContatos_ListView.class);
+                    startActivity(newUserIntent);
+                }
+                if (item.getItemId()==R.id.anvPerfil) {
+                    Intent newUserIntent = new Intent(MudarDadosUsuario.this, MudarDadosUsuario.class);
+                    startActivity(newUserIntent);
+                }
+                if(item.getItemId()==R.id.anvMudar) {
+                    Intent newUserIntent = new Intent(MudarDadosUsuario.this, Pick_Contacts.class);
+                    startActivity(newUserIntent);
+                }
+                return true;
+            }
+        });
     }
+
 }
