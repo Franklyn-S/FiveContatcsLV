@@ -15,4 +15,4 @@
 ![changePerfilScreen](https://raw.githubusercontent.com/Franklyn-S/FiveContatcsLV/master/screens/changePerfilScreen.png)
 
 ### Choose Contacts Screen
-![chooseContactsScreen](https://raw.githubusercontent.com/Franklyn-S/FiveContatcsLV/master/screens/chooseContactsScreen.png.png)
+![chooseContactsScreen](https://raw.githubusercontent.com/Franklyn-S/FiveContatcsLV/master/screens/chooseContactsScreen.png)
