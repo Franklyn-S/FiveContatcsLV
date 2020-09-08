@@ -38,6 +38,7 @@ public class ListaDeContatos_ListView extends AppCompatActivity implements UIEdu
     ListView lv;
     BottomNavigationView bnv;
     User user;
+    Boolean callPermissionSecondTime = false;
     String[] itens ={"Filha", "Filho", "Netinho"};
     String[] numeros ={"tel:000000003435","tel:2000348835","tel:1003435888" };
 
@@ -76,19 +77,20 @@ public class ListaDeContatos_ListView extends AppCompatActivity implements UIEdu
 
     protected void preencherListaDeContatos (){
         //Vamos montar o ListView
-        final ArrayList<Contato> contactsList = new ArrayList<>();
-        SharedPreferences recoverContacts = getSharedPreferences("contatos2", Activity.MODE_PRIVATE);
+        SharedPreferences recoverContacts = getSharedPreferences("contatos", Activity.MODE_PRIVATE);
         int num = recoverContacts.getInt("numContatos", 0);
+        final ArrayList<Contato> contactsList = new ArrayList<>();
         Log.v("PDM", "Num listacontatos: "+num);
         Contato contact;
-        for (int i=1;i<=num;i++) {
-            String serializedObject = recoverContacts.getString("contato0"+i,"");
-            Log.v("PDM", "Objeto Serializado: "+ serializedObject);
-            if (serializedObject.compareTo("") != 0) {
+        for (int i=0;i<num;i++) {
+            String serializedContact = recoverContacts.getString("contato"+i,"");
+            Log.v("PDM", "Recebendo contato serializado: "+ serializedContact);
+            if (serializedContact.compareTo("") != 0) {
                 try {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(serializedObject.getBytes(StandardCharsets.ISO_8859_1.name()));
+                    ByteArrayInputStream bis = new ByteArrayInputStream(serializedContact.getBytes(StandardCharsets.ISO_8859_1.name()));
                     ObjectInputStream ois = new ObjectInputStream(bis);
                     contact = (Contato) ois.readObject();
+                    Log.v("PDM", ""+contact);
                     if (contact!=null) {
                         Log.v("PDM", contact.getName());
                         contactsList.add(contact);
@@ -107,6 +109,7 @@ public class ListaDeContatos_ListView extends AppCompatActivity implements UIEdu
         ArrayList<String> contactNames = new ArrayList<>();
         for(int j = 0;j<num;j++){
             if (contactsList.size() > j) {
+                Log.v("PDM", "Contatos Salvo: " + contactsList.get(j).getName());
                 contactNames.add(contactsList.get(j).getName());
             }
         }
@@ -120,14 +123,15 @@ public class ListaDeContatos_ListView extends AppCompatActivity implements UIEdu
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 //Toast.makeText(ListaDeContatos_ListView.this, "No item: "+i, Toast.LENGTH_LONG).show();
                 Intent intent;
-                Log.v("PDM", contactsList.get(i).getPhoneNumber());
-                Uri uri = Uri.parse("tel:+"+contactsList.get(i).getPhoneNumber());
+                Log.v("PDM", contactsList.get(i).getSelectedPhoneNumber());
+                Uri uri = Uri.parse("tel:+"+contactsList.get(i).getSelectedPhoneNumber());
                 if (isCallAllowed()) {
                     intent = new Intent(Intent.ACTION_CALL, uri);
-                } else {
+                    startActivity(intent);
+                } else if(callPermissionSecondTime){
                     intent = new Intent(Intent.ACTION_DIAL, uri);
+                    startActivity(intent);
                 }
-                startActivity(intent);
             }
         });
 
@@ -149,13 +153,7 @@ public class ListaDeContatos_ListView extends AppCompatActivity implements UIEdu
                 permissionMessage.show(getSupportFragmentManager(), "primeiravez2");
             } else {
                 Log.v("PDM", "Segunda vez");
-
-                String message = "Nossa aplicação precisa acessar o telefone para discagem automática. Uma janela de permisão será apresentada em seguida";
-                String title = "Permissão de acesso a chamadas";
-                int code = 1;
-                UIEducacionalPermissao permissionMessage = new UIEducacionalPermissao(message, title, code);
-                permissionMessage.onAttach((Context)this);
-                permissionMessage.show(getSupportFragmentManager(), "segundavez2");
+                callPermissionSecondTime = true;
             }
 
         }
@@ -202,6 +200,7 @@ public class ListaDeContatos_ListView extends AppCompatActivity implements UIEdu
             Intent newUserIntent = new Intent(ListaDeContatos_ListView.this, Pick_Contacts.class);
             startActivity(newUserIntent);
         }
+        finish();
         return true;
     }
 

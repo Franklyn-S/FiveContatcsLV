@@ -7,8 +7,10 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -80,15 +82,10 @@ public class Pick_Contacts extends AppCompatActivity implements UIEducacionalPer
         btSalvar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SharedPreferences saveUserContacts = getSharedPreferences("usuarioPadrao", Activity.MODE_PRIVATE);
-                SharedPreferences.Editor userEditor = saveUserContacts.edit();
-
-                SharedPreferences salvaContatos = getSharedPreferences("contatos2", Activity.MODE_PRIVATE);
+                SharedPreferences salvaContatos = getSharedPreferences("contatos", Activity.MODE_PRIVATE);
                 SharedPreferences.Editor editor = salvaContatos.edit();
                 editor.putInt("numContatos", contactList.size());
-                Set<String> names = new ArraySet<>();
-                Set<String> numbers = new ArraySet<>();
-
+                Log.v("PDM", "Num Pick_contatos: "+contactList.size());
 
                  try {
                      ByteArrayOutputStream dt;
@@ -96,33 +93,28 @@ public class Pick_Contacts extends AppCompatActivity implements UIEducacionalPer
                      String contatoSerializado;
                      for (int i=0;i<contactList.size();i++){
                          Contato contact = contactList.get(i);
-                         names.add(contact.getName());
-                         numbers.add(contact.getPhoneNumber());
                          dt = new ByteArrayOutputStream();
                          oos = new ObjectOutputStream(dt);
-                         oos.writeObject(contactList.get(i));
+                         oos.writeObject(contact);
                          contatoSerializado = dt.toString(StandardCharsets.ISO_8859_1.name());
-                         editor.putString("contato0"+i, contatoSerializado);
-                         Log.v("PDM", "Colocando contato "+ i +" no shared");
+                         Log.v("PDM", "Colocando contato "+ contatoSerializado +" no shared");
+                         editor.putString("contato"+i, contatoSerializado);
                      }
                      if (user != null) {
                          user.setContactList(contactList);
                      }
-                     userEditor.putStringSet("contactNames", names);
-                     userEditor.putStringSet("contactNumbers", numbers);
                  } catch (UnsupportedEncodingException e) {
                      e.printStackTrace();
                  } catch (IOException e) {
                      e.printStackTrace();
                  }
                 Log.v("PDM", "commit");
-                userEditor.commit();
                 editor.commit();
 
                 Intent intent = new Intent(Pick_Contacts.this, ListaDeContatos_ListView.class);
                 intent.putExtra("usuario", user);
                 startActivity(intent);
-                finish();
+                //finish();
             }
         });
         name.setOnTouchListener(new View.OnTouchListener() {
@@ -151,8 +143,6 @@ public class Pick_Contacts extends AppCompatActivity implements UIEducacionalPer
         Log.v("PDM","Matei a Activity Lista de Contatos");
     }
 
-
-
     public void onCLickSearch(View v) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             Log.v("PDM", "Tenho permissão");
@@ -161,6 +151,8 @@ public class Pick_Contacts extends AppCompatActivity implements UIEducacionalPer
             String [] queryArgs = {"%"+ name.getText() +"%"};
             Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI, null, query, queryArgs, null);
             Contato contact;
+            String [] listPhones = new String[0];
+            final ArrayList<Contato> searchedContacts = new ArrayList<>();
             while (cursor.moveToNext()) {
                 int nameIndex = cursor.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME);
                 int contactIdIndex = cursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID);
@@ -173,11 +165,15 @@ public class Pick_Contacts extends AppCompatActivity implements UIEducacionalPer
                 String phonesQuery = ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + contactId;
                 Cursor phones = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, phonesQuery, null, null);
                 int j = 0;
+                assert phones != null;
+                listPhones= new String[phones.getCount()];
                 while(phones.moveToNext()) {
-                    j++;
                     String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    contact.setPhoneNumber(phoneNumber);
+                    listPhones[j] = phoneNumber;
+                    j++;
                 }
+                contact.setPhoneNumbers(listPhones);
+                searchedContacts.add(contact);
                 searchList.add(contact);
             }
             ArrayList<String> contactNames = new ArrayList<>();
@@ -191,13 +187,39 @@ public class Pick_Contacts extends AppCompatActivity implements UIEducacionalPer
             lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    final String[] finalListPhones = searchedContacts.get(i).getPhoneNumbers();
+                    final String[] phoneNumber = {""};
+                    Log.v("PDM", finalListPhones.length+"");
+                    if (finalListPhones.length > 0) {
+                        phoneNumber[0] = finalListPhones[0];
+                    }
                     Log.v("PDM", "Clicou no " + i + " " + searchList.get(i).getName());
-                    contactList.add(searchList.get(i));
+                    if (finalListPhones.length > 1) {
+                        AlertDialog.Builder mBuilder = new AlertDialog.Builder(Pick_Contacts.this);
+                        mBuilder.setTitle("Escolha um número: ");
+                        mBuilder.setSingleChoiceItems(finalListPhones, -1, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Log.v("PDM", "Clicou no número " + finalListPhones[i]);
+                                phoneNumber[0] = finalListPhones[i];
+                                dialogInterface.dismiss();
+                            }
+                        });
+                        AlertDialog mDialog = mBuilder.create();
+                        mDialog.show();
+                    }
+                    Contato contact = searchList.get(i);
+                    Log.v("PDM", phoneNumber[0]);
+                    contact.setPhoneNumbers(phoneNumber);
+                    contact.setSelectedPhoneNumber(phoneNumber[0]);
+                    contactList.add(contact);
                     searchList = new ArrayList<>();
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(Pick_Contacts.this, android.R.layout.simple_list_item_1, new String[0]);
                     lv.setAdapter(adapter);
+
                 }
             });
+            cursor.close();
         } else {
             if(shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
                 Log.v("PDM", "Pedir permissão read contacts");
@@ -244,6 +266,7 @@ public class Pick_Contacts extends AppCompatActivity implements UIEducacionalPer
             Intent newUserIntent = new Intent(Pick_Contacts.this, Pick_Contacts.class);
             startActivity(newUserIntent);
         }
+        finish();
         return true;
     }
 }

@@ -125,6 +125,7 @@ public class MudarDadosUsuario extends AppCompatActivity {
                     Intent newUserIntent = new Intent(MudarDadosUsuario.this, Pick_Contacts.class);
                     startActivity(newUserIntent);
                 }
+                finish();
                 return true;
             }
         });

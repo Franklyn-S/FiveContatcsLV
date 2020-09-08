@@ -4,15 +4,29 @@ import java.io.Serializable;
 
 public class Contato implements Serializable {
     String name;
-    String phoneNumber;
+    String[] phoneNumbers;
+    String selectedPhoneNumber;
 
     public Contato() {
         
     }
 
+    public Contato(String name, String[] phoneNumbers, String selectedPhoneNUmber) {
+        this.name = name;
+        this.phoneNumbers = phoneNumbers;
+        this.selectedPhoneNumber = selectedPhoneNUmber;
+    }
+
+
+    public Contato(String name, String[] phoneNumbers) {
+        this.name = name;
+        this.phoneNumbers = phoneNumbers;
+    }
+
     public Contato(String name, String phoneNumber) {
         this.name = name;
-        this.phoneNumber = phoneNumber;
+        this.phoneNumbers = new String[]{phoneNumber};
+        this.selectedPhoneNumber = phoneNumber;
     }
 
     public String getName() {
@@ -23,12 +37,21 @@ public class Contato implements Serializable {
         this.name = name;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    public String[] getPhoneNumbers() {
+        return phoneNumbers;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhoneNumbers(String[] phoneNumbers) {
+        this.phoneNumbers = phoneNumbers;
     }
+
+    public String getSelectedPhoneNumber() {
+        return selectedPhoneNumber;
+    }
+
+    public void setSelectedPhoneNumber(String selectedPhoneNumber) {
+        this.selectedPhoneNumber = selectedPhoneNumber;
+    }
+
 
 }
